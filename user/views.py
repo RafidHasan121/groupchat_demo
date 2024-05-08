@@ -17,25 +17,34 @@ def login(email, password):
 
 def get_user(supabase):
     data = supabase.auth.get_user()
-    print(data)
     return data
+
+
+def get_projects(supabase, owner_id):
+    response = supabase.table('projects').select(
+        "name", count='exact').eq("owner", owner_id).execute()
+    return response
 # Create your views here.
 
 
 def landing(request):
-    if request.method == "POST":
+    if request.method == "POST" or get_user(supabase):
         email = request.POST.get("email")
         password = request.POST.get("password")
-        data = login(email, password)
-        res = supabase.auth.get_session()
-        return render(request, "landing.html")
+        user = login(email, password)
+        project_list = get_projects(supabase, user.user.id)
+        return render(request, "landing.html", context={"dropdown": project_list.data})
     else:
-        if get_user(supabase):
-            return render(request, "landing.html")
-        return login_page(request)
+        return render(request, "landing.html")
+
 
 def login_page(request):
     if get_user(supabase):
-        return landing(request)
+        return HttpResponseRedirect("/")
     else:
         return render(request, "login.html")
+
+
+def logout(request):
+    supabase.auth.sign_out()
+    return HttpResponseRedirect("/login")
