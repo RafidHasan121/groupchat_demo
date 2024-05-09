@@ -39,21 +39,29 @@
         placeholder="Type your message here..."
       />
       {% csrf_token %}
+      <button id="logoutButton">Logout</button> <!-- Added Logout button -->
     </main>
 
     <script>
       const chatbot = document.getElementById("chatbot");
       const userInput = document.getElementById("userInput");
       const projectSelect = document.getElementById("projectSelect");
+      const logoutButton = document.getElementById("logoutButton"); // Added logout button reference
       // Retrieve the CSRF token from the DOM
       const csrftoken = document.querySelector(
         "[name=csrfmiddlewaretoken]"
       ).value;
 
+      // Logout button click event handler
+      logoutButton.addEventListener("click", function () {
+        // Perform logout logic here
+        alert("Logout clicked!");
+      });
+
       userInput.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
           const userMessage = userInput.value;
-          const projectSelectedValue = projectSelect.value
+          const projectSelectedValue = projectSelect.value;
       
           // Check if the project has been selected
           if (projectSelectedValue === "" || projectSelectedValue === "Choose Project") {
