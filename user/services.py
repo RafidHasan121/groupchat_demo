@@ -10,12 +10,15 @@ def get_user(supabase):
 
 
 def get_projects(supabase, owner_id):
-    response = supabase.table('projects').select(
-        "name", count='exact').eq("owner", owner_id).execute()
-    return response
+    self = supabase.table('projects').select(
+        "name", "id", count='exact').eq("owner", owner_id).execute()
+    shared = supabase.table('access_control').select(
+        "projects(name, id)", count='exact').eq('member', owner_id).execute()
+    return self, shared
+
 
 def invited_project(supabase, id):
-    
-    #probably need checking? 
+
+    # probably need checking?
     response = supabase.table('projects').select(
         "name").eq("access_control.member", id).execute()

@@ -1,118 +1,474 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <!-- Meta tags -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Title -->
     <title>Chatbot Support</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+
+    <!-- Font Awesome CSS -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+
+    <!-- Custom Styles -->
     <style>
+      /* Styling for chatbot container */
       #chatbot {
-        width: 300px;
-        height: 500px;
-        border: 1px solid #000;
+        height: 100%;
+        min-height: 300px;
+        max-height: 500px;
+        border: 1px solid;
         padding: 10px;
         overflow: auto;
+        border-radius: 5px;
+        color: white;
       }
+
+      .border-dark-subtle {
+        border-color: #595959 !important;
+      }
+
+      /* Styling for chatbot input */
       #chatbot input {
         width: 100%;
         margin-bottom: 10px;
+        color: white;
+      }
+
+      /* Offcanvas-header */
+      .offcanvas-header {
+        padding: 0.88rem !important;
+      }
+
+      /* Styling for floating label */
+      .form-floating label {
+        color: white !important;
+      }
+
+      /* Styling for floating label focus */
+      .form-floating input:focus ~ label,
+      .form-floating input:not(:placeholder-shown) ~ label {
+        background-color: transparent !important;
+      }
+
+      /* Styling for floating label focus indicator */
+      .form-floating input:focus ~ label::after,
+      .form-floating input:not(:placeholder-shown) ~ label::after {
+        background-color: transparent !important;
       }
     </style>
   </head>
-  <body>
-    <main>
-      <div>
-        <label>Choose Project</label>
-        <select name="projectSelect" id="projectSelect">
-          <option value="" disabled selected>Choose Project</option>
-          {% for each in dropdown %}
-          <option value="{{each.name}}">{{each.name}}</option>
-          {% endfor %}
-        </select>
+
+  <body class="bg-dark">
+    <!-- Navigation Bar -->
+    <nav
+      class="navbar bg-dark p-2 border-1 border-bottom border-warning-subtle p-2"
+    >
+      <div class="container-fluid">
+        <!-- Left side of the navbar -->
+        <div class="col-9">
+          <h1 class="navbar-brand text-white text-uppercase">
+            Chatbot Support
+          </h1>
+        </div>
+        <!-- Right side of the navbar -->
+        <div class="col-3 d-flex justify-content-end gap-3">
+          <!-- Button to trigger user invitation -->
+          <button
+            class="btn btn-md btn-success"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#userInvite"
+            aria-controls="userInvite"
+          >
+            <i class="fa-solid fa-users"></i>
+          </button>
+          <!-- Button for logout -->
+          <a class="btn btn-md btn-danger" id="logoutButton" href="logout/"
+            >Logout</a
+          >
+        </div>
       </div>
-      <h1>Chatbot Support</h1>
-      <div id="chatbot">
-        <p>
-          Hello, welcome to our chatbot support! How can I assist you today?
-        </p>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main
+      class="d-flex align-items-center justify-content-center"
+      style="height: 85svh"
+    >
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-7">
+            <!-- Dropdown to select project -->
+            <select
+              class="form-select form-select-lg mb-3 bg-dark text-white border-dark-subtle"
+              aria-label="projectSelect"
+              name="projectSelect"
+              id="projectSelect"
+            >
+              <option selected hidden value="">Select Project</option>
+              <!-- Option group for self projects -->
+              <optgroup label="Self Projects" id="selfProjects">
+                <!-- Iterate through each option -->
+                {% for each in self %}
+                <option value="{{each.id}}">{{each.name}}</option>
+                {% endfor %}
+              </optgroup>
+              <!-- Option group for invited projects -->
+              <optgroup label="Invited Projects" id="invitedProjects">
+                <!-- Iterate through each option -->
+                {% for it in shared %}
+                <option value="{{it.projects.id}}">{{it.projects.name}}</option>
+                {% endfor %}
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="row justify-content-center">
+          <div class="col-7 mb-3">
+            <!-- Chatbot conversation area -->
+            <div id="chatbot" class="border-dark-subtle">
+              <p>
+                Hello, welcome to our chatbot support! How can I assist you
+                today?
+              </p>
+            </div>
+          </div>
+
+          <div class="col-7 mb-2">
+            <!-- Input field for user messages -->
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control bg-dark text-white border-dark-subtle"
+                id="userInput"
+                placeholder="Type your message here..."
+              />
+              <!-- CSRF token for security -->
+              {% csrf_token %}
+              <label for="userInput">Type your message here...</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invite User Offcanvas -->
+        <div
+          class="offcanvas offcanvas-end bg-dark"
+          tabindex="-1"
+          id="userInvite"
+          aria-labelledby="userInviteLabel"
+        >
+          <div class="offcanvas-header border-bottom border-warning-subtle">
+            <h5 class="offcanvas-title text-white" id="userInviteLabel">
+              Invite Users
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="offcanvas"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="offcanvas-body">
+            <form id="userInviteForm" method="POST" action="{% url 'invite' %}">
+              {% csrf_token %}
+              <div class="mb-3 form-floating">
+                <input
+                  type="email"
+                  class="form-control bg-dark text-white"
+                  id="user_invite_email"
+                  name="user_invite_email"
+                  aria-describedby="user_invite_email"
+                  placeholder="Email address"
+                />
+                <label for="user_invite_email" class="form-label"
+                  >Email address</label
+                >
+              </div>
+              <!-- Dropdown to select project -->
+              <select
+                class="form-select form-select-lg mb-3 bg-dark text-white border-dark-subtle"
+                aria-label="projectSelect"
+                name="projectSelect"
+                id="projectSelect"
+              >
+                <option selected hidden value="">Select Project</option>
+                <!-- Iterate through each option -->
+                {% for each in self %}
+                <option value="{{each.id}}">{{each.name}}</option>
+                {% endfor %}
+              </select>
+              <button
+                type="submit"
+                class="btn btn-lg btn-success col-12"
+                id="invite"
+              >
+                Send Invite
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
-      <input
-        type="text"
-        id="userInput"
-        placeholder="Type your message here..."
-      />
-      {% csrf_token %}
-      <button id="logoutButton">Logout</button> <!-- Added Logout button -->
     </main>
 
-    <script>
+    <!-- Project -->
+    <script type="module">
+      import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js";
+
+      const SUPABASE_URL = "{{ url }}";
+      const SUPABASE_ANON_KEY = "{{ key }}";
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
       const chatbot = document.getElementById("chatbot");
       const userInput = document.getElementById("userInput");
       const projectSelect = document.getElementById("projectSelect");
-      const logoutButton = document.getElementById("logoutButton"); // Added logout button reference
-      // Retrieve the CSRF token from the DOM
-      const csrftoken = document.querySelector(
+      const logoutButton = document.getElementById("logoutButton");
+      const inviteUser = document.getElementById("invite");
+
+      let selectedProjectId = "";
+
+      projectSelect.addEventListener("change", function () {
+        selectedProjectId = projectSelect.value;
+        fetchChatHistory(selectedProjectId);
+        handleUserInput(selectedProjectId);
+        supabase
+          .channel("chat_history")
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "chat_history",
+              filter: `project_id=eq.${selectedProjectId}`,
+            },
+            handleInserts
+          )
+          .subscribe();
+      });
+
+      function passSelectedProjectId(id) {
+        console.log("Updated selected project ID:", id);
+      }
+
+      const csrfToken = document.querySelector(
         "[name=csrfmiddlewaretoken]"
       ).value;
 
-      // Logout button click event handler
       logoutButton.addEventListener("click", function () {
-        // Perform logout logic here
-        alert("Logout clicked!");
+        alert("Logged out!");
       });
 
-      userInput.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-          const userMessage = userInput.value;
-          const projectSelectedValue = projectSelect.value;
-      
-          // Check if the project has been selected
-          if (projectSelectedValue === "" || projectSelectedValue === "Choose Project") {
-            alert("Please select a project first.");
-            return; // Prevent further execution
-          }
-          
-          chatbot.innerHTML += `<p>[user input]: ${userMessage}</p>`;
-          // Display a loading message
-          chatbot.innerHTML += `<p>Loading...</p>`;
-          // Disable the input field
-          userInput.disabled = true;
-          projectSelect.disabled = true;
-          // Include the CSRF token in the headers
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", "/chatbot/", true); // Asynchronous request
-          xhr.setRequestHeader("Content-Type", "application/json");
-          xhr.setRequestHeader("X-CSRFToken", csrftoken); // Set the CSRF token in the headers
-          xhr.onload = function () {
-            if (xhr.status === 200) {
-              const chatbotResponse = JSON.parse(xhr.responseText).message;
-              // Remove the loading message and add the chatbot response
-              chatbot.innerHTML = chatbot.innerHTML.replace(
-                "<p>Loading...</p>",
-                ""
-              );
-              chatbot.innerHTML += `<p>[chatbot response]: ${chatbotResponse}</p>`;
-            } else {
-              console.error("Request failed. Status code:", xhr.status);
-              chatbot.innerHTML = chatbot.innerHTML.replace(
-                "<p>Loading...</p>",
-                ""
-              );
+      function handleUserInput(newSelectedProjectId) {
+        userInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            const userMessage = userInput.value;
+
+            if (!newSelectedProjectId || newSelectedProjectId === "") {
+              alert("Please select a project first.");
+              return;
             }
-            // Re-enable the input field
-            userInput.disabled = false;
-          };
-          xhr.onerror = function () {
-            // Handle any errors that occur during the request
-            console.error("An error occurred during the request.");
-            // Re-enable the input field
-            userInput.disabled = false;
-            projectSelect.disabled = false;
-          };
-          // Introduce a manual delay before sending the request
-          setTimeout(function () {
-            xhr.send(JSON.stringify({ message: userMessage, project: projectSelectedValue}));
-          }, 1000); // Delay of 2000 milliseconds (2 seconds)
-          userInput.value = "";
-        }
-      });
+
+            const greetingMessage = chatbot.querySelector("p:first-child");
+            if (greetingMessage) {
+              greetingMessage.style.display = "none";
+            }
+
+            {% comment %} chatbot.innerHTML += `<p>user: ${userMessage}</p>`; {% endcomment %}
+            chatbot.innerHTML += `<p>Loading...</p>`;
+
+            userInput.disabled = true;
+            projectSelect.disabled = true;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "https://corsproxy.io/?https://cogo.creatego.io/", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.setRequestHeader("X-CSRFToken", csrfToken);
+
+            xhr.onload = function () {
+              if (xhr.status === 200) {
+                const thread_id = JSON.parse(xhr.responseText).thread_id;
+                chatbot.innerHTML = chatbot.innerHTML.replace(
+                  "<p>Loading...</p>",
+                  ""
+                );
+                fetch(`https://corsproxy.io/?https://cogo.creatego.io/${thread_id}`, {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                  }
+                })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error('Request failed. Status code: ' + response.status);
+                  }
+                  const reader = response.body.getReader();
+                  const decoder = new TextDecoder();
+                  let partialMessage = '';
+                
+                  function readChunk() {
+                    reader.read().then(({ value, done }) => {
+                      if (done) {
+                        // Handle remaining message if any
+                        if (partialMessage) {
+                          const chatbotResponseMessage = partialMessage;
+                          {% comment %} chatbot.innerHTML += `<p>[chatbot response]: ${chatbotResponseMessage}</p>`; {% endcomment %}
+                        }
+                        return;
+                      }
+                      const chunk = decoder.decode(value, { stream: true });
+                      const lines = (partialMessage + chunk).split('\n');
+                      // Process each complete line
+                      lines.slice(0, -1).forEach(line => {
+                        const chatbotResponseMessage = line;
+                        {% comment %} chatbot.innerHTML += `<p>[chatbot response]: ${chatbotResponseMessage}</p>`; {% endcomment %}
+                      });
+                      // Store the last partial line for the next iteration
+                      partialMessage = lines[lines.length - 1];
+                      readChunk();
+                     {% comment %} Post To Rafid the message  {% endcomment %}
+                     fetch("https://corsproxy.io/?https://cogo.creatego.io/upload/", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                      },
+                      body: JSON.stringify({
+                        role: "bot",
+                        message: partialMessage,
+                        project_id: selectedProjectId,
+                        thread_id: thread_id
+                      }),
+                    })
+                      .then((response) => {
+                        if (!response.ok) {
+                          throw new Error("Request failed. Status code: " + response.status);
+                        }
+                        console.log("Message sent successfully.");
+                      })
+                      .catch((error) => {
+                        console.error("An error occurred during the request:", error);
+                      });
+                      {% comment %} End of rafid  {% endcomment %}
+                    }).catch(error => {
+                      console.error('Error reading response:', error);
+                    });
+                  }
+                  readChunk();
+                })
+                .catch(error => {
+                  console.error('An error occurred during the request:', error);
+                })
+                .finally(() => {
+                  userInput.disabled = false;
+                  projectSelect.disabled = false;
+                });
+                
+                {% comment %} const xhr2 = new XMLHttpRequest();
+                xhr2.open("GET", `https://corsproxy.io/?https://cogo.creatego.io/${thread_id}`, true);
+                xhr2.setRequestHeader("Content-Type", "application/json");
+                xhr2.setRequestHeader("X-CSRFToken", csrfToken);
+            
+                xhr2.onload = function () {
+                  if (xhr2.status === 200) {
+                    const chatbotResponseMessage = JSON.parse(xhr2.responseText).message;
+                    chatbot.innerHTML += `<p>[chatbot response]: ${chatbotResponseMessage}</p>`;
+                  } else {
+                    console.error("Request failed. Status code:", xhr2.status);
+                  }
+                  userInput.disabled = false;
+                  projectSelect.disabled = false;
+                };
+            
+                xhr2.onerror = function () {
+                  console.error("An error occurred during the request.");
+                  userInput.disabled = false;
+                  projectSelect.disabled = false;
+                };
+            
+                xhr2.send(); {% endcomment %}
+              } else {
+                console.error("Request failed. Status code:", xhr.status);
+                chatbot.innerHTML = chatbot.innerHTML.replace(
+                  "<p>Loading...</p>",
+                  ""
+                );
+                userInput.disabled = false;
+                projectSelect.disabled = false;
+              }
+            };
+
+            setTimeout(function () {
+              xhr.send(
+                JSON.stringify({
+                  message: userMessage,
+                  project: newSelectedProjectId,
+                })
+              );
+            }, 1000);
+            userInput.value = "";
+          }
+        });
+      }
+
+      function fetchChatHistory(newSelectedProjectId) {
+        const url = `https://mysite-pnb5.onrender.com/chat/?project_id=${newSelectedProjectId}`;
+
+        fetch(url)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            const chatbotDiv = document.getElementById("chatbot");
+            chatbotDiv.innerHTML = "";
+            data.sort((a, b) => a.timestamp - b.timestamp);
+            data.reverse();
+
+            data.forEach((item) => {
+              const messageParagraph = document.createElement("p");
+              messageParagraph.textContent = `${item.role}: ${item.message}`;
+              chatbotDiv.appendChild(messageParagraph);
+            });
+          })
+          .catch((error) => {
+            console.error(
+              "There was a problem with the fetch operation:",
+              error
+            );
+          });
+      }
+
+      const handleInserts = (payload) => {
+        const {
+          new: { role, message },
+        } = payload;
+        const chatHistoryDiv = document.getElementById("chatbot");
+        const newMessageParagraph = document.createElement("p");
+        newMessageParagraph.textContent = `${role}: ${message}`;
+        chatHistoryDiv.appendChild(newMessageParagraph);
+      };
     </script>
+
+    <!-- Bootstrap JavaScript Bundle (Bootstrap JS + Popper.js) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
   </body>
 </html>
