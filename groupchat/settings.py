@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-y&)i&&lb&+&r9&c$=vkuutnx53*90wx^)knigi7wc6zzkk7ag=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["groupchat-demo.onrender.com"]
 
 
 # Application definition
