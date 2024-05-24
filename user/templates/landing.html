@@ -303,7 +303,7 @@
                   "<p>Loading...</p>",
                   ""
                 );
-                fetch(`https://corsproxy.io/?https://cogo.creatego.io/${thread_id}`, {
+                fetch(`https://corsproxy.io/?https://cogo.creatego.io/?thread_id=${thread_id}`, {
                   method: 'GET',
                   headers: {
                     'Content-Type': 'application/json',
